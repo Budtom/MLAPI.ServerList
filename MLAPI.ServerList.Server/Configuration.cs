@@ -7,7 +7,7 @@ namespace MLAPI.ServerList.Server
         public ushort Port { get; set; } = 9423;
         public string ListenAddress { get; set; } = "0.0.0.0";
         public bool VerbosePrints = true;
-        public bool UseMongo { get; set; } = false;
+        public bool UseMongo { get; set; } = true;
         public string MongoConnection { get; set; } = "mongodb://127.0.0.1:27017";
         public int CollectionExpiryDelay { get; set; } = 20 * 60 * 1000;
         public string MongoDatabase { get; set; } = "listserver";
@@ -26,6 +26,12 @@ namespace MLAPI.ServerList.Server
                 Name = "Players",
                 Required = true,
                 Type = ContractType.Int32
+            },
+            new ContractDefinition()
+            {
+                Name = "Geolocation",
+                Required = true,
+                Type = ContractType.Location
             }
         };
     }

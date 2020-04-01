@@ -79,6 +79,8 @@ namespace MLAPI.ServerList.Server
                     ExpireAfter = TimeSpan.FromMilliseconds(configuration.CollectionExpiryDelay)
                 }));
 
+                IndexKeysDefinition<ServerModel> indexModel = Builders<ServerModel>.IndexKeys.Geo2DSphere("ContractData.Geolocation.coordinates");
+                mongoClient.GetDatabase(configuration.MongoDatabase).GetCollection<ServerModel>("servers").Indexes.CreateOne(new CreateIndexModel<ServerModel>(indexModel));
 
                 for (int i = 0; i < configuration.ServerContract.Length; i++)
                 {
@@ -263,6 +265,12 @@ namespace MLAPI.ServerList.Server
                                         case ContractType.Guid:
                                             boxedValue = new Guid(reader.ReadString());
                                             break;
+                                        case ContractType.Location:
+                                            Geolocation geoLocation = new Geolocation();
+                                            geoLocation.type = reader.ReadString();
+                                            geoLocation.coordinates = new float[] { reader.ReadSingle(), reader.ReadSingle() };
+                                            boxedValue = geoLocation;
+                                            break;
                                     }
 
                                     if (boxedValue != null)
@@ -310,6 +318,11 @@ namespace MLAPI.ServerList.Server
                                             break;
                                         case ContractType.Guid:
                                             reader.ReadString();
+                                            break;
+                                        case ContractType.Location:
+                                            reader.ReadString();
+                                            reader.ReadSingle();
+                                            reader.ReadSingle();
                                             break;
                                     }
                                 }
@@ -419,6 +432,8 @@ namespace MLAPI.ServerList.Server
                             {
                                 Console.WriteLine("[Query] Creating mongo filter");
                                 FilterDefinition<ServerModel> filter = Builders<ServerModel>.Filter.And(Builders<ServerModel>.Filter.Where(x => x.LastPingTime >= DateTime.UtcNow.AddMilliseconds(-configuration.ServerTimeout)), QueryParser.CreateFilter(new List<JToken>() { parsedQuery }));
+                                //FilterDefinition<ServerModel> filter = QueryParser.CreateFilter(new List<JToken>() { parsedQuery });
+
 
                                 if (configuration.VerbosePrints)
                                 {
@@ -494,6 +509,14 @@ namespace MLAPI.ServerList.Server
                                                     break;
                                                 case ContractType.Guid:
                                                     writer.Write(((Guid)pair.Value).ToString());
+                                                    break;
+                                                case ContractType.Location:
+                                                    var geoLocation = (Geolocation)pair.Value;
+                                                    writer.Write(geoLocation.type);
+                                                    foreach (float element in geoLocation.coordinates)
+                                                    {
+                                                        writer.Write(element);
+                                                    }
                                                     break;
                                             }
                                         }
@@ -657,6 +680,12 @@ namespace MLAPI.ServerList.Server
                                             case ContractType.Guid:
                                                 boxedValue = new Guid(reader.ReadString());
                                                 break;
+                                            case ContractType.Location:
+                                                Geolocation geoLocation = new Geolocation();
+                                                geoLocation.type = reader.ReadString();
+                                                geoLocation.coordinates = new float[] { reader.ReadSingle(), reader.ReadSingle() };
+                                                boxedValue = geoLocation;
+                                                break;
                                         }
 
                                         if (boxedValue != null)
@@ -704,6 +733,11 @@ namespace MLAPI.ServerList.Server
                                                 break;
                                             case ContractType.Guid:
                                                 reader.ReadString();
+                                                break;
+                                            case ContractType.Location:
+                                                reader.ReadString();
+                                                reader.ReadSingle();
+                                                reader.ReadSingle();
                                                 break;
                                         }
                                     }

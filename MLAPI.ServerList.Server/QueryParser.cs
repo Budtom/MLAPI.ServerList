@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using MLAPI.ServerList.Shared;
 using MongoDB.Driver;
+using MongoDB.Driver.GeoJsonObjectModel;
 using Newtonsoft.Json.Linq;
 
 namespace MLAPI.ServerList.Server
@@ -576,6 +577,24 @@ namespace MLAPI.ServerList.Server
                                 {
                                     CaseSensitive = caseSensitive
                                 });
+                            }
+                        }
+                        break;
+
+                    case "$near":
+                        {
+                            if (child.Type == JTokenType.Property)
+                            {
+                                List<JToken> children = child.Values().ToList();
+
+                                var coordinates = children[0].First().ToObject<List<float>>();
+
+                                JToken minDistanceToken = children.Where(x => x is JProperty property && property.Name == "$minDistance").FirstOrDefault();
+                                JToken maxDistanceToken = children.Where(x => x is JProperty property && property.Name == "$maxDistance").FirstOrDefault();
+
+                                var point = GeoJson.Point(MongoDB.Driver.GeoJsonObjectModel.GeoJson.Geographic(coordinates[0], coordinates[1]));
+
+                                return Builders<ServerModel>.Filter.Near("ContractData.Geolocation.coordinates", point, minDistance:(double)minDistanceToken, maxDistance:(double)maxDistanceToken);
                             }
                         }
                         break;

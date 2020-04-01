@@ -12,6 +12,14 @@
         UInt64,
         String,
         Buffer,
-        Guid
+        Guid,
+        Location
+    }
+
+    public class Geolocation
+    {
+        public string type { get; set; }
+
+        public float[] coordinates { get; set; }
     }
 }

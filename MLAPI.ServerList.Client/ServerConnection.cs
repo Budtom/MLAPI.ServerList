@@ -135,6 +135,12 @@ namespace MLAPI.ServerList.Client
                                                 case ContractType.Guid:
                                                     model.ContractData[name] = new Guid(reader.ReadString());
                                                     break;
+                                                case ContractType.Location:
+                                                    Geolocation geoLocation = new Geolocation();
+                                                    geoLocation.type = reader.ReadString();
+                                                    geoLocation.coordinates = new float[] { reader.ReadSingle(), reader.ReadSingle() };
+                                                    model.ContractData[name] = geoLocation;
+                                                    break;
                                             }
                                         }
 
@@ -193,7 +199,8 @@ namespace MLAPI.ServerList.Client
                 typeof(ulong),
                 typeof(string),
                 typeof(byte[]),
-                typeof(Guid)
+                typeof(Guid),
+                typeof(Geolocation)
             };
 
             Dictionary<string, object> validationData = data.Where(x => acceptedTypes.Contains(x.Value.GetType())).ToDictionary(x => x.Key, x => x.Value);
@@ -266,6 +273,10 @@ namespace MLAPI.ServerList.Client
                         else if (pair.Value is string)
                         {
                             writer.Write((byte)ContractType.String);
+                        }
+                        else if (pair.Value is Geolocation)
+                        {
+                            writer.Write((byte)ContractType.Location);
                         }
                     }
 
@@ -346,7 +357,9 @@ namespace MLAPI.ServerList.Client
                     typeof(ulong),
                     typeof(string),
                     typeof(byte[]),
-                    typeof(Guid)
+                    typeof(Guid),
+                    typeof(float[]),
+                    typeof(Geolocation)
                 };
 
                 advertismentData = data.Where(x => acceptedTypes.Contains(x.Value.GetType())).ToDictionary(x => x.Key, x => x.Value);
@@ -422,6 +435,15 @@ namespace MLAPI.ServerList.Client
                                 writer.Write((byte)ContractType.String);
                                 writer.Write((string)pair.Value);
                             }
+                            else if (pair.Value is Geolocation geoLocation)
+                            {
+                                writer.Write((byte)ContractType.Location);
+                                writer.Write(geoLocation.type);
+                                foreach (float element in geoLocation.coordinates)
+                                {
+                                    writer.Write(element);
+                                }
+                            }
                         }
 
                         stream.Position = 0;
@@ -454,7 +476,9 @@ namespace MLAPI.ServerList.Client
                     typeof(ulong),
                     typeof(string),
                     typeof(byte[]),
-                    typeof(Guid)
+                    typeof(Guid),
+                    typeof(float[]),
+                    typeof(Geolocation)
                     };
 
                     advertismentData = data.Where(x => acceptedTypes.Contains(x.Value.GetType())).ToDictionary(x => x.Key, x => x.Value);
@@ -520,6 +544,15 @@ namespace MLAPI.ServerList.Client
                         {
                             writer.Write((byte)ContractType.String);
                             writer.Write((string)pair.Value);
+                        }
+                        else if (pair.Value is Geolocation geoLocation)
+                        {
+                            writer.Write((byte)ContractType.Location);
+                            writer.Write(geoLocation.type);
+                            foreach (float element in geoLocation.coordinates)
+                            {
+                                writer.Write(element);
+                            }
                         }
                     }
 
